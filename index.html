@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacation Manager</title>
+    <link href="https://unpkg.com/vis-timeline@7.4.9/styles/vis-timeline-graph2d.min.css" rel="stylesheet"
+          type="text/css"/>
+    <script src="https://unpkg.com/vis-timeline@7.4.9/standalone/umd/vis-timeline-graph2d.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0px;
+        }
+
+
+        header {
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        header .logo {
+            font-size: 1.5rem;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav li {
+            display: inline;
+            margin-right: 1rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        input[type="text"], input[type="date"] {
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #personSelect {
+            height: 100px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .collapsible {
+            background-color: #f1f1f1;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            transition: 0.4s;
+        }
+
+        .collapsible:hover {
+            background-color: #ddd;
+        }
+
+        .content {
+            padding: 0 18px;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+        }
+
+        .hidden {
+            max-height: 0;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="logo">vaca-vaca</div>
+    <nav>
+        <ul>
+<!--            <li><a href="#">Home</a></li>-->
+<!--            <li><a href="#">Features</a></li>-->
+<!--            <li><a href="#">Pricing</a></li>-->
+<!--            <li><a href="#">Contact</a></li>-->
+        </ul>
+    </nav>
+</header>
+
+
+<div class="container">
+
+    <div id="nonTimelineContent">
+
+
+        </br>
+        <div>
+            <input type="text" id="personName" placeholder="Person Name">
+            <button onclick="addPerson()">Add Person</button>
+        </div>
+        <br>
+        <table>
+            <thead>
+            <tr>
+                <th>Person</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody id="peopleList"></tbody>
+        </table>
+
+        <br>
+        <div>
+            <input type="text" id="vacationName" placeholder="Vacation Name">
+            <label for="personSelect">People: </label>
+            <select id="personSelect" multiple></select>
+            <input type="date" id="startDate" required>
+            <input type="date" id="endDate" required>
+            <button onclick="addVacation()">Add Vacation</button>
+        </div>
+        <br>
+
+
+        </br>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>People</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+            </tr>
+            </thead>
+            <tbody id="vacationsList"></tbody>
+        </table>
+        </br>
+
+
+        <button id="copyIframeCode" onclick="copyIframeCodeToClipboard()">Copy iframe code</button>
+
+    </div>
+    <button id="openInNewWindow" onclick="openSiteInNewWindow()" class="hidden">Edit</button>
+    </br>
+
+    <div id="vacationTimeline" style="height: 200px; width:100%"></div>
+
+
+</div>
+<script>
+    let people = [];
+    let vacations = [];
+    let timeline = null;
+
+    function copyIframeCodeToClipboard() {
+        const iframeCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
+        const textarea = document.createElement('textarea');
+        textarea.value = iframeCode;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        alert('Iframe code copied to clipboard.');
+    }
+
+    function openSiteInNewWindow() {
+        window.open(window.location.href, '_blank');
+    }
+
+    function isInIframe() {
+        return window.self !== window.top;
+    }
+
+    function checkIframe() {
+        if (isInIframe()) {
+            const nonTimelineContent = document.getElementById('nonTimelineContent');
+            nonTimelineContent.classList.add('hidden');
+
+            const openInNewWindowButton = document.getElementById('openInNewWindow');
+            openInNewWindowButton.classList.remove('hidden');
+        }
+    }
+
+
+    // LZW compression functions
+    function lzw_encode(s) {
+        const dict = {};
+        const data = (s + "").split("");
+        const out = [];
+        let phrase = data[0];
+        let code = 256;
+
+        for (let i = 1; i < data.length; i++) {
+            const currChar = data[i];
+            if (dict[phrase + currChar] != null) {
+                phrase += currChar;
+            } else {
+                out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+                dict[phrase + currChar] = code;
+                code++;
+                phrase = currChar;
+            }
+        }
+        out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
+
+        for (let i = 0; i < out.length; i++) {
+            out[i] = String.fromCharCode(out[i]);
+        }
+
+        return out.join("");
+    }
+
+    function lzw_decode(s) {
+        const dict = {};
+        const data = (s + "").split("");
+        const out = [];
+        let currChar = data[0];
+        let oldPhrase = currChar;
+        out.push(currChar);
+        let code = 256;
+        let phrase;
+
+        for (let i = 1; i < data.length; i++) {
+            const currCode = data[i].charCodeAt(0);
+            if (currCode < 256) {
+                phrase = data[i];
+            } else {
+                phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+            }
+            out.push(phrase);
+            currChar = phrase.charAt(0);
+            dict[code] = oldPhrase + currChar;
+            code++;
+            oldPhrase = phrase;
+        }
+
+        return out.join("");
+    }
+
+    function addPerson() {
+        const personNameInput = document.getElementById('personName');
+        const personName = personNameInput.value.trim();
+
+        if (!personName) {
+            alert('Please enter a name.');
+            return;
+        }
+
+        people.push(personName);
+        personNameInput.value = '';
+
+        renderPeople();
+        updatePersonSelect();
+        persistData();
+    }
+
+    function removePerson(index) {
+        if (!confirm('Are you sure you want to remove this person?')) {
+            return;
+        }
+        vacations = vacations.filter(function (vac) {
+            if (vac.peopleIndexes.length > 1) {
+                let i = vac.peopleIndexes.indexOf(index);
+                vac.peopleIndexes.splice(i, 1);
+                return true;
+            } else {
+                return vac.peopleIndexes.includes(index);
+            }
+
+        });
+        people.splice(index, 1);
+        renderPeople();
+        renderVacations();
+        updatePersonSelect();
+        persistData();
+    }
+
+    function addVacation() {
+        const vacationNameInput = document.getElementById('vacationName');
+        const peopleSelect = document.getElementById('personSelect');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        if (!vacationNameInput.value.trim()) {
+            alert('Please enter a vacation name.');
+            return;
+        }
+
+        if (peopleSelect.selectedOptions.length === 0) {
+            alert('Please select at least one person.');
+            return;
+        }
+
+        if (!startDateInput.value || !endDateInput.value) {
+            alert('Please fill in both dates.');
+            return;
+        }
+
+        if (endDateInput.value < startDateInput.value) {
+            alert('End date must be after the start date.');
+            return;
+        }
+
+        const peopleIndexes = Array.from(peopleSelect.selectedOptions).map(option => parseInt(option.value));
+
+        vacations.push({
+            name: vacationNameInput.value.trim(),
+            peopleIndexes: peopleIndexes,
+            startDate: startDateInput.value,
+            endDate: endDateInput.value
+        });
+
+        vacationNameInput.value = '';
+        startDateInput.value = '';
+        endDateInput.value = '';
+
+        renderVacations();
+        persistData();
+    }
+
+    function renderPeople() {
+        const peopleList = document.getElementById('peopleList');
+        peopleList.innerHTML = '';
+
+        people.forEach((person, index) => {
+            const tr = document.createElement('tr');
+            const nameTd = document.createElement('td');
+            const actionTd = document.createElement('td');
+            const removeBtn = document.createElement('button');
+
+            nameTd.textContent = person;
+
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => removePerson(index);
+            actionTd.appendChild(removeBtn);
+
+            tr.appendChild(nameTd);
+            tr.appendChild(actionTd);
+
+            peopleList.appendChild(tr);
+        });
+    }
+
+    function updatePersonSelect() {
+        const personSelect = document.getElementById('personSelect');
+        personSelect.innerHTML = '';
+        people.forEach((person, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.text = person;
+            personSelect.add(option);
+        });
+    }
+
+    function renderVacations() {
+
+        document.getElementById("vacationTimeline").style.height = people.length *30 +"px";
+
+        const vacationsList = document.getElementById('vacationsList');
+        vacationsList.innerHTML = '';
+
+        vacations.forEach((vacation, index) => {
+            const row = document.createElement('tr');
+
+            const vacationNameCell = document.createElement('td');
+            vacationNameCell.textContent = vacation.name;
+            row.appendChild(vacationNameCell);
+
+            const peopleCell = document.createElement('td');
+            peopleCell.textContent = vacation.peopleIndexes.map(i => people[i]).join(', ');
+            row.appendChild(peopleCell);
+
+            const startDateCell = document.createElement('td');
+            startDateCell.textContent = vacation.startDate;
+            row.appendChild(startDateCell);
+
+            const endDateCell = document.createElement('td');
+            endDateCell.textContent = vacation.endDate;
+            row.appendChild(endDateCell);
+
+            vacationsList.appendChild(row);
+        });
+
+        const container = document.getElementById('vacationTimeline');
+
+        // Create a DataSet with vacation data
+        const items = new vis.DataSet();
+        vacations.forEach((vacation, index) => {
+            const peopleNames = vacation.peopleIndexes.map(i => people[i]).join(', ');
+
+            vacation.peopleIndexes.map(i => people[i]).forEach((person, pi) => {
+                items.add({
+                    id: index + '-' + pi,
+                    group: person,
+                    content: `${vacation.name}<br>${peopleNames}`,
+                    start: vacation.startDate,
+                    end: vacation.endDate
+                });
+            });
+
+        });
+
+        const ONE_MONTHS_AGO = new Date();
+        const TWELWE_MONTHS_AHEAD = new Date();
+        ONE_MONTHS_AGO.setMonth(ONE_MONTHS_AGO.getMonth() - 1);
+        TWELWE_MONTHS_AHEAD.setMonth(TWELWE_MONTHS_AHEAD.getMonth() + 12);
+
+        // Configure timeline options
+        const options = {
+            stack: false,
+            min: ONE_MONTHS_AGO, // lower limit of visible range
+            max: TWELWE_MONTHS_AHEAD, // upper limit of visible range
+            hiddenDates: [
+                {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'} // hide weekends
+            ],
+            zoomMin: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            zoomMax: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
+            editable: false,
+            margin: {
+                item: 10, // minimal margin between items
+                axis: 5 // minimal margin between items and the axis
+            },
+            orientation: 'top'
+        };
+
+        // Update the existing timeline or create a new one
+        if (timeline != null) {
+            timeline.setItems(items);
+        } else {
+            timeline = new vis.Timeline(container, items, options);
+
+            timeline.on('click', function (props) {
+                if (props.what === 'item') {
+                    const vacationIndex = props.item.split('-')[0];
+                    removeVacation(vacationIndex);
+                }
+            });
+        }
+
+        var groups = new vis.DataSet(Array.from(people, (person) => {
+            return {id: person, content: person};
+        }));
+
+        timeline.setGroups(groups);
+
+        // Zoom to fit all vacations
+        timeline.fit();
+
+    }
+
+    function removeVacation(index) {
+        if (isInIframe()) {
+            alert("Removing vacations is not allowed in preview. Press edit to do modifications");
+            return;
+        }
+
+        if (!confirm('Are you sure you want to remove this vacation?')) {
+            return;
+        }
+
+        vacations.splice(index, 1);
+        renderVacations();
+        persistData();
+    }
+
+
+    function persistData() {
+        // Filter out vacations that started two months ago or earlier
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        vacations = vacations.filter(vacation => {
+            const startDate = new Date(vacation.startDate);
+            return startDate > twoMonthsAgo;
+        });
+
+        const data = {people, vacations};
+        const jsonString = JSON.stringify(data);
+        const compressed = lzw_encode(jsonString);
+        const encoded = encodeURIComponent(compressed);
+        window.location.hash = encoded;
+    }
+
+    function loadData() {
+        const encoded = window.location.hash.substring(1);
+        if (encoded === '') return;
+
+        try {
+            const compressed = decodeURIComponent(encoded);
+            const jsonString = lzw_decode(compressed);
+            const data = JSON.parse(jsonString);
+            people = data.people || [];
+            vacations = data.vacations || [];
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+
+        renderPeople();
+        updatePersonSelect();
+        renderVacations();
+    }
+
+    window.onload = function () {
+        loadData();
+        checkIframe();
+
+        document.querySelector('.collapsible').addEventListener('click', function () {
+            this.classList.toggle('active');
+            const content = this.nextElementSibling;
+            content.classList.toggle('hidden');
+        });
+    };
+
+</script>
+
+</body>
+</html>
+
