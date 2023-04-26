@@ -178,6 +178,7 @@
             <select id="personSelect" multiple></select>
             <input type="date" id="startDate" required>
             <input type="date" id="endDate" required>
+            *End date is excluded
             <button onclick="addVacation()">Add Vacation</button>
         </div>
         <br>
@@ -190,7 +191,7 @@
                 <th>Name</th>
                 <th>People</th>
                 <th>Start Date</th>
-                <th>End Date</th>
+                <th>End Date Excluded</th>
             </tr>
             </thead>
             <tbody id="vacationsList"></tbody>
@@ -199,6 +200,7 @@
 
 
         <button id="copyIframeCode" onclick="copyIframeCodeToClipboard()">Copy iframe code</button>
+        <button id="copyIframeCode" onclick="copyLinkCodeToClipboard()">Copy link</button>
 
     </div>
     <button id="openInNewWindow" onclick="openSiteInNewWindow()" class="hidden">Edit</button>
@@ -215,14 +217,25 @@
 
     function copyIframeCodeToClipboard() {
         const iframeCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
+        copy(iframeCode);
+
+        alert('Iframe code copied to clipboard.');
+    }
+
+    function copy(link) {
         const textarea = document.createElement('textarea');
-        textarea.value = iframeCode;
+        textarea.value = link;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
+    }
 
-        alert('Iframe code copied to clipboard.');
+    function copyLinkCodeToClipboard() {
+        const link = window.location.href;
+        copy(link);
+
+        alert('Link code copied to clipboard.');
     }
 
     function openSiteInNewWindow() {
