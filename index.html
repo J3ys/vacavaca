@@ -4,104 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vacation Manager</title>
-    <link rel="icon" type="image/x-icon" href="/logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
 
     <link href="https://unpkg.com/vis-timeline@7.4.9/styles/vis-timeline-graph2d.min.css" rel="stylesheet"
           type="text/css"/>
     <script src="https://unpkg.com/vis-timeline@7.4.9/standalone/umd/vis-timeline-graph2d.min.js"></script>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0px;
+        :root {
+            --bg: #f4f5f7;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --header: #111827;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-soft: #dbeafe;
+            --accent-text: #1e3a8a;
+            --planned: #93c5fd;
+            --danger: #dc2626;
+            --danger-soft: #fee2e2;
+            --past: #eef0f3;
+            --past-text: #6b7280;
+            --ok-soft: #dcfce7;
+            --ok-text: #166534;
+            --shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 1px 3px rgba(0, 0, 0, .06);
         }
 
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f1115;
+                --card: #181b21;
+                --text: #e5e7eb;
+                --muted: #9ca3af;
+                --border: #2a2f38;
+                --header: #0a0c0f;
+                --accent: #3b82f6;
+                --accent-hover: #60a5fa;
+                --accent-soft: #1e3a5f;
+                --accent-text: #dbeafe;
+                --planned: #1d4ed8;
+                --danger: #f87171;
+                --danger-soft: #3b1d1d;
+                --past: #22262d;
+                --past-text: #9ca3af;
+                --ok-soft: #14301f;
+                --ok-text: #86efac;
+                --shadow: none;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+        }
 
         header {
-            background-color: #333;
-            color: white;
+            background: var(--header);
+            color: #fff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
+            gap: 12px;
+            padding: 12px 20px;
+            flex-wrap: wrap;
         }
 
         header .logo {
-            font-size: 1.5rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
+        header .logo img { width: 28px; height: 28px; border-radius: 6px; }
+
+        header .right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        header nav a { color: #d1d5db; text-decoration: none; margin-left: 14px; }
+        header nav a:hover { color: #fff; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px 20px;
+            margin-bottom: 20px;
         }
 
-        nav li {
-            display: inline;
-            margin-right: 1rem;
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
         }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-        }
+        .card h2 { font-size: 1.05rem; margin: 0; }
+        .hint { color: var(--muted); font-size: 12px; }
 
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        input[type="text"], input[type="date"] {
-            padding: 5px;
-            margin-right: 10px;
-        }
+        .grid-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
+        .grid-2 > .card { margin-bottom: 0; }
+        @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
 
         button {
-            padding: 5px 10px;
-            background-color: #007bff;
+            font: inherit;
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        button:hover { background: var(--accent-hover); }
+        button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        button.secondary { background: transparent; color: var(--text); border-color: var(--border); }
+        button.secondary:hover { background: var(--past); }
+        header button.secondary { color: #fff; border-color: #374151; }
+        header button.secondary:hover { background: #1f2937; }
+        button.danger { background: transparent; color: var(--danger); border-color: var(--border); }
+        button.danger:hover { background: var(--danger-soft); }
+        button.icon { padding: 4px 8px; font-size: 12px; }
+
+        input[type="text"], input[type="date"], select {
+            font: inherit;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            min-width: 0;
+        }
+
+        label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        .row > label.field { flex: 1 1 140px; }
+
+        .segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .segmented button {
+            border-radius: 0;
+            background: transparent;
+            color: var(--text);
             border: none;
-            color: white;
+            border-right: 1px solid var(--border);
+            padding: 6px 12px;
+        }
+        .segmented button:last-child { border-right: none; }
+        .segmented button:hover { background: var(--past); }
+        .segmented button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+        .segmented button small { display: block; font-size: 10px; opacity: .75; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-size: 13px;
+        }
+        button.chip:hover { background: var(--past); }
+        button.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+        .chip .x {
+            border: none;
+            background: none;
+            color: var(--muted);
+            padding: 0 2px;
+            font-size: 15px;
+            line-height: 1;
+        }
+        .chip .x:hover { color: var(--danger); background: none; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        tfoot td { font-weight: 600; border-bottom: none; }
+        tr.is-past td { color: var(--past-text); }
+
+        .bar { display: flex; height: 10px; border-radius: 999px; background: var(--past); overflow: hidden; min-width: 120px; }
+        .bar .taken { background: var(--accent); }
+        .bar .planned { background: var(--planned); }
+        .legend { display: inline-flex; align-items: center; gap: 14px; font-size: 12px; color: var(--muted); }
+        .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+        .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--past); color: var(--past-text); }
+        .badge.upcoming { background: var(--accent-soft); color: var(--accent-text); }
+        .badge.ongoing { background: var(--ok-soft); color: var(--ok-text); }
+
+        .form-error { color: var(--danger); font-size: 13px; min-height: 18px; margin-top: 8px; }
+        .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--header);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s, transform .2s;
+            z-index: 10;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        dialog {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card);
+            color: var(--text);
+            padding: 20px;
+            width: min(520px, calc(100vw - 32px));
+        }
+        dialog::backdrop { background: rgba(0, 0, 0, .4); }
+        dialog h2 { margin-top: 0; font-size: 1.05rem; }
+        .dialog-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 16px; }
+
+        /* vis-timeline theming */
+        .vis-timeline { border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+        .vis-panel.vis-center, .vis-panel.vis-left, .vis-panel.vis-right,
+        .vis-panel.vis-top, .vis-panel.vis-bottom { border-color: var(--border); }
+        .vis-labelset .vis-label { color: var(--text); border-bottom-color: var(--border); }
+        .vis-labelset .vis-label .vis-inner { padding: 6px 10px; }
+        .vis-foreground .vis-group { border-bottom-color: var(--border); }
+        .vis-time-axis .vis-text { color: var(--muted); }
+        .vis-time-axis .vis-grid.vis-minor { border-color: var(--border); }
+        .vis-time-axis .vis-grid.vis-major { border-color: var(--muted); }
+        .vis-current-time { background-color: var(--danger); width: 2px; }
+        .vis-item {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent-text);
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
         }
+        .vis-item.past { background: var(--past); border-color: var(--border); color: var(--past-text); }
+        .vis-item.vis-selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .vis-item .vis-item-content { padding: 3px 6px; }
 
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        #personSelect {
-            height: 100px;
-            margin-bottom: -8px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .hidden {
-            max-height: 0;
-        }
+        .hidden { display: none !important; }
+        body.embed .edit-only { display: none !important; }
+        body:not(.embed) .embed-only { display: none !important; }
     </style>
 
     <!-- Google tag (gtag.js) -->
@@ -120,133 +285,223 @@
 </head>
 <body>
 <header>
-    <div class="logo">vaca-vaca</div>
-    <nav>
-        <ul>
-            <!--            <li><a href="#">Home</a></li>-->
-            <!--            <li><a href="#">Features</a></li>-->
-            <li><a href="https://www.youtube.com/watch?v=NNbKGfyT8eY" target="_blank">How to</a></li>
-            <li><a href="https://github.com/J3ys/vacavaca/">Project</a></li>
-        </ul>
-    </nav>
+    <div class="logo"><img src="logo.png" alt="">vaca-vaca</div>
+    <div class="right">
+        <div class="edit-only">
+            <button class="secondary" onclick="copyLink()">Copy link</button>
+            <button class="secondary" onclick="copyEmbed()">Copy embed code</button>
+        </div>
+        <button class="embed-only" onclick="openSiteInNewWindow()">Open &amp; edit</button>
+        <nav>
+            <a href="https://www.youtube.com/watch?v=NNbKGfyT8eY" target="_blank" rel="noopener">How to</a>
+            <a href="https://github.com/J3ys/vacavaca/" target="_blank" rel="noopener">Project</a>
+        </nav>
+    </div>
 </header>
-
 
 <div class="container">
 
-    <div id="nonTimelineContent">
-
-
-        </br>
-        <div>
-            <input type="text" id="personName" placeholder="Person Name">
-            <button onclick="addPerson()">Add Person</button>
+    <section class="card">
+        <div class="card-head">
+            <div>
+                <h2>Vacation days</h2>
+                <div class="hint">Working days (Mon–Fri). Public holidays are not subtracted.</div>
+            </div>
+            <div class="segmented" id="frameSelect" role="group" aria-label="Time frame"></div>
         </div>
-        <br>
-        <table>
-            <thead>
-            <tr>
-                <th>Person</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody id="peopleList"></tbody>
-        </table>
-
-        <br>
-        <div>
-            <input type="text" id="vacationName" placeholder="Vacation Name">
-            <label for="personSelect">People: </label>
-            <select id="personSelect" multiple></select>
-            <input type="date" id="startDate" required>
-            <input type="date" id="endDate" required>
-            *End date is excluded
-            <button onclick="addVacation()">Add Vacation</button>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Person</th>
+                    <th class="num">Taken</th>
+                    <th class="num">Planned</th>
+                    <th class="num">Total</th>
+                    <th style="width:35%">
+                        <span class="legend"><span><i style="background:var(--accent)"></i>Taken</span><span><i style="background:var(--planned)"></i>Planned</span></span>
+                    </th>
+                </tr>
+                </thead>
+                <tbody id="statsBody"></tbody>
+                <tfoot id="statsFoot"></tfoot>
+            </table>
         </div>
-        <br>
+    </section>
 
+    <section class="card">
+        <div class="card-head">
+            <h2>Timeline</h2>
+            <div class="row">
+                <button class="secondary" onclick="moveTimeline('today')">Today</button>
+                <button class="secondary" onclick="moveTimeline('fit')">Show all</button>
+                <span class="hint edit-only">Click a vacation to edit or remove it</span>
+            </div>
+        </div>
+        <div id="vacationTimeline"></div>
+        <div id="timelineEmpty" class="empty hidden">No vacations yet.</div>
+    </section>
 
-        </br>
-        <table>
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>People</th>
-                <th>Start Date</th>
-                <th>End Date Excluded</th>
-            </tr>
-            </thead>
-            <tbody id="vacationsList"></tbody>
-        </table>
-        </br>
+    <div class="grid-2 edit-only">
+        <section class="card">
+            <div class="card-head"><h2>Add vacation</h2></div>
+            <div class="field hint" style="margin-bottom:6px">Who</div>
+            <div id="addPeople" class="chips"></div>
+            <div class="row" style="margin-top:14px">
+                <label class="field">From
+                    <input type="date" id="startDate">
+                </label>
+                <label class="field">To (last day off)
+                    <input type="date" id="endDate">
+                </label>
+                <label class="field">Label
+                    <input type="text" id="vacationName" placeholder="Vacation">
+                </label>
+            </div>
+            <div class="row" style="margin-top:14px; justify-content:space-between; align-items:center">
+                <span class="hint" id="addHint"></span>
+                <button onclick="addVacation()">Add vacation</button>
+            </div>
+            <div class="form-error" id="addError"></div>
+        </section>
 
-
-        <button id="copyIframeCode" onclick="copyIframeCodeToClipboard()">Copy iframe code</button>
-        <button id="copyIframeCode" onclick="copyLinkCodeToClipboard()">Copy link</button>
-
+        <section class="card">
+            <div class="card-head"><h2>Team</h2><span class="hint" id="teamCount"></span></div>
+            <div class="row">
+                <input type="text" id="personName" placeholder="Name" style="flex:1" onkeydown="if(event.key==='Enter')addPerson()">
+                <button onclick="addPerson()">Add person</button>
+            </div>
+            <div class="form-error" id="personError"></div>
+            <div id="peopleList" class="chips"></div>
+        </section>
     </div>
-    <button id="openInNewWindow" onclick="openSiteInNewWindow()" class="hidden">Edit</button>
-    </br>
 
-    <div id="vacationTimeline" style="height: 200px; width:100%"></div>
-
-
+    <section class="card edit-only" style="margin-top:20px">
+        <div class="card-head">
+            <h2>All vacations</h2>
+            <div class="row" style="align-items:center">
+                <select id="listPerson" aria-label="Filter by person" onchange="renderVacationList()"></select>
+                <label class="hint"><input type="checkbox" id="showPast" onchange="renderVacationList()"> Show past</label>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Who</th>
+                    <th>Label</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th class="num">Days</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody id="vacationsList"></tbody>
+            </table>
+        </div>
+        <div id="listEmpty" class="empty hidden">Nothing to show.</div>
+    </section>
 </div>
+
+<dialog id="editDialog">
+    <h2>Edit vacation</h2>
+    <div class="hint" style="margin-bottom:6px">Who</div>
+    <div id="editPeople" class="chips"></div>
+    <div class="row" style="margin-top:14px">
+        <label class="field">From <input type="date" id="editStart"></label>
+        <label class="field">To (last day off) <input type="date" id="editEnd"></label>
+        <label class="field">Label <input type="text" id="editName" placeholder="Vacation"></label>
+    </div>
+    <div class="hint" id="editHint" style="margin-top:10px"></div>
+    <div class="form-error" id="editError"></div>
+    <div class="dialog-actions">
+        <button class="danger" onclick="deleteEditing()">Delete</button>
+        <div>
+            <button class="secondary" onclick="editDialog.close()">Cancel</button>
+            <button onclick="saveEditing()">Save</button>
+        </div>
+    </div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script>
+    // Storage format is kept compatible with existing shared links:
+    // {people: [name], vacations: [{name, peopleIndexes, startDate, endDate}]}
+    // where endDate is EXCLUSIVE (the first day back at work). The UI shows an inclusive "To" date.
     let people = [];
     let vacations = [];
     let timeline = null;
+    let editingIndex = null;
+    const addSelected = new Set();
+    const editSelected = new Set();
 
-    function copyIframeCodeToClipboard() {
-        const iframeCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
-        copy(iframeCode);
-
-        alert('Iframe code copied to clipboard.');
+    const TODAY = isoLocal(new Date());
+    const THIS_YEAR = new Date().getFullYear();
+    const FRAMES = [
+        {year: THIS_YEAR - 1, label: 'Previous year'},
+        {year: THIS_YEAR, label: 'This year'},
+        {year: THIS_YEAR + 1, label: 'Next year'}
+    ];
+    let frameYear = THIS_YEAR;
+    try {
+        const saved = parseInt(localStorage.getItem('vacavaca.frame'), 10);
+        if (FRAMES.some(f => f.year === saved)) frameYear = saved;
+    } catch (e) {
+        console.warn('localStorage unavailable, using current year frame', e);
     }
 
-    function copy(link) {
-        const textarea = document.createElement('textarea');
-        textarea.value = link;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
+    // ---------- date helpers (UTC-based to avoid DST drift) ----------
+    function isoLocal(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    function copyLinkCodeToClipboard() {
-        const link = window.location.href;
-        copy(link);
-
-        alert('Link code copied to clipboard.');
+    function parseIso(s) {
+        const [y, m, d] = s.split('-').map(Number);
+        return new Date(Date.UTC(y, m - 1, d));
     }
 
-    function openSiteInNewWindow() {
-        window.open(window.location.href, '_blank');
+    function addDays(s, n) {
+        const d = parseIso(s);
+        d.setUTCDate(d.getUTCDate() + n);
+        return d.toISOString().slice(0, 10);
     }
 
-    function isInIframe() {
-        return window.self !== window.top;
-    }
+    const maxIso = (a, b) => (a > b ? a : b);
+    const minIso = (a, b) => (a < b ? a : b);
 
-    function checkIframe() {
-        if (isInIframe()) {
-            const nonTimelineContent = document.getElementById('nonTimelineContent');
-            nonTimelineContent.classList.add('hidden');
-
-            const openInNewWindowButton = document.getElementById('openInNewWindow');
-            openInNewWindowButton.classList.remove('hidden');
+    function workdays(from, toExcl) {
+        if (from >= toExcl) return 0;
+        let n = 0;
+        const d = parseIso(from), end = parseIso(toExcl);
+        while (d < end) {
+            const w = d.getUTCDay();
+            if (w !== 0 && w !== 6) n++;
+            d.setUTCDate(d.getUTCDate() + 1);
         }
+        return n;
     }
 
+    const fmt = new Intl.DateTimeFormat(undefined, {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'});
+    const formatDate = s => fmt.format(parseIso(s));
 
-    // LZW compression functions
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+
+    function statusOf(v) {
+        if (v.endDate <= TODAY) return 'past';
+        if (v.startDate <= TODAY) return 'ongoing';
+        return 'upcoming';
+    }
+
+    // ---------- LZW compression (unchanged, links depend on it) ----------
     function lzw_encode(s) {
         const dict = {};
         const data = (s + "").split("");
         const out = [];
         let phrase = data[0];
         let code = 256;
-
         for (let i = 1; i < data.length; i++) {
             const currChar = data[i];
             if (dict[phrase + currChar] != null) {
@@ -259,11 +514,9 @@
             }
         }
         out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-
         for (let i = 0; i < out.length; i++) {
             out[i] = String.fromCharCode(out[i]);
         }
-
         return out.join("");
     }
 
@@ -276,7 +529,6 @@
         out.push(currChar);
         let code = 256;
         let phrase;
-
         for (let i = 1; i < data.length; i++) {
             const currCode = data[i].charCodeAt(0);
             if (currCode < 256) {
@@ -290,301 +542,425 @@
             code++;
             oldPhrase = phrase;
         }
-
         return out.join("");
     }
 
-    function addPerson() {
-        const personNameInput = document.getElementById('personName');
-        const personName = personNameInput.value.trim();
-
-        if (!personName) {
-            alert('Please enter a name.');
-            return;
-        }
-
-        people.push(personName);
-        personNameInput.value = '';
-
-        renderPeople();
-        updatePersonSelect();
-        persistData();
-    }
-
-    function removePerson(index) {
-        if (!confirm('Are you sure you want to remove this person?')) {
-            return;
-        }
-
-        vacations = vacations.filter(function (vac) {
-            let ret = true;
-
-            if (vac.peopleIndexes.length === 1) {
-
-                ret = !vac.peopleIndexes.includes(index);
-
-
-            } else {
-
-                let i = vac.peopleIndexes.indexOf(index);
-                vac.peopleIndexes.splice(i, 1);
-            }
-
-
-            let j = 0;
-            while (j < vac.peopleIndexes.length) {
-                let higherIndexPerson = vac.peopleIndexes[j];
-                if (higherIndexPerson > index) {
-                    vac.peopleIndexes[j] = vac.peopleIndexes[j] - 1;
-                }
-                j++;
-            }
-
-            return ret;
-        });
-        people.splice(index, 1);
-        renderPeople();
-        renderVacations();
-        updatePersonSelect();
-        persistData();
-    }
-
-    function addVacation() {
-        const vacationNameInput = document.getElementById('vacationName');
-        const peopleSelect = document.getElementById('personSelect');
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-
-        if (!vacationNameInput.value.trim()) {
-            alert('Please enter a vacation name.');
-            return;
-        }
-
-        if (peopleSelect.selectedOptions.length === 0) {
-            alert('Please select at least one person.');
-            return;
-        }
-
-        if (!startDateInput.value || !endDateInput.value) {
-            alert('Please fill in both dates.');
-            return;
-        }
-
-        if (endDateInput.value < startDateInput.value) {
-            alert('End date must be after the start date.');
-            return;
-        }
-
-        const peopleIndexes = Array.from(peopleSelect.selectedOptions).map(option => parseInt(option.value));
-
-        vacations.push({
-            name: vacationNameInput.value.trim(),
-            peopleIndexes: peopleIndexes,
-            startDate: startDateInput.value,
-            endDate: endDateInput.value
-        });
-
-        vacationNameInput.value = '';
-        startDateInput.value = '';
-        endDateInput.value = '';
-
-        renderVacations();
-        persistData();
-    }
-
-    function renderPeople() {
-        const peopleList = document.getElementById('peopleList');
-        peopleList.innerHTML = '';
-
-        people.forEach((person, index) => {
-            const tr = document.createElement('tr');
-            const nameTd = document.createElement('td');
-            const actionTd = document.createElement('td');
-            const removeBtn = document.createElement('button');
-
-            nameTd.textContent = person;
-
-            removeBtn.textContent = 'Remove';
-            removeBtn.onclick = () => removePerson(index);
-            actionTd.appendChild(removeBtn);
-
-            tr.appendChild(nameTd);
-            tr.appendChild(actionTd);
-
-            peopleList.appendChild(tr);
-        });
-    }
-
-    function updatePersonSelect() {
-        const personSelect = document.getElementById('personSelect');
-        personSelect.innerHTML = '';
-        people.forEach((person, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = person;
-            personSelect.add(option);
-        });
-    }
-
-    function renderVacations() {
-
-        document.getElementById("vacationTimeline").style.height = people.length * 30 + "px";
-
-        const vacationsList = document.getElementById('vacationsList');
-        vacationsList.innerHTML = '';
-
-        vacations.forEach((vacation, index) => {
-            const row = document.createElement('tr');
-
-            const vacationNameCell = document.createElement('td');
-            vacationNameCell.textContent = vacation.name;
-            row.appendChild(vacationNameCell);
-
-            const peopleCell = document.createElement('td');
-            peopleCell.textContent = vacation.peopleIndexes.map(i => people[i]).join(', ');
-            row.appendChild(peopleCell);
-
-            const startDateCell = document.createElement('td');
-            startDateCell.textContent = vacation.startDate;
-            row.appendChild(startDateCell);
-
-            const endDateCell = document.createElement('td');
-            endDateCell.textContent = vacation.endDate;
-            row.appendChild(endDateCell);
-
-            vacationsList.appendChild(row);
-        });
-
-        const container = document.getElementById('vacationTimeline');
-
-        // Create a DataSet with vacation data
-        const items = new vis.DataSet();
-        vacations.forEach((vacation, index) => {
-            const peopleNames = vacation.peopleIndexes.map(i => people[i]).join(', ');
-
-            vacation.peopleIndexes.map(i => people[i]).forEach((person, pi) => {
-                items.add({
-                    id: index + '-' + pi,
-                    group: person,
-                    content: `${vacation.name}<br>${peopleNames}`,
-                    start: vacation.startDate,
-                    end: vacation.endDate
-                });
-            });
-
-        });
-
-        const ONE_MONTHS_AGO = new Date();
-        const TWELWE_MONTHS_AHEAD = new Date();
-        ONE_MONTHS_AGO.setMonth(ONE_MONTHS_AGO.getMonth() - 1);
-        TWELWE_MONTHS_AHEAD.setMonth(TWELWE_MONTHS_AHEAD.getMonth() + 12);
-
-        // Configure timeline options
-        const options = {
-            stack: false,
-            min: ONE_MONTHS_AGO, // lower limit of visible range
-            max: TWELWE_MONTHS_AHEAD, // upper limit of visible range
-            hiddenDates: [
-                {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'} // hide weekends
-            ],
-            zoomMin: 1000 * 60 * 60 * 24 * 7, // one week in milliseconds
-            editable: false,
-            margin: {
-                item: 10, // minimal margin between items
-                axis: 5 // minimal margin between items and the axis
-            },
-            orientation: 'top'
-        };
-
-        // Update the existing timeline or create a new one
-        if (timeline != null) {
-            timeline.setItems(items);
-        } else {
-            timeline = new vis.Timeline(container, items, options);
-
-            timeline.on('click', function (props) {
-                if (props.what === 'item') {
-                    const vacationIndex = props.item.split('-')[0];
-                    removeVacation(vacationIndex);
-                }
-            });
-        }
-
-        var groups = new vis.DataSet(Array.from(people, (person) => {
-            return {id: person, content: person};
-        }));
-
-        timeline.setGroups(groups);
-
-        // Zoom to fit all vacations
-        timeline.fit();
-
-    }
-
-    function removeVacation(index) {
-        if (isInIframe()) {
-            alert("Removing vacations is not allowed in preview. Press edit to do modifications");
-            return;
-        }
-
-        if (!confirm('Are you sure you want to remove this vacation?')) {
-            return;
-        }
-
-        vacations.splice(index, 1);
-        renderVacations();
-        persistData();
-    }
-
-
+    // ---------- persistence ----------
     function persistData() {
-        // Filter out vacations that started two months ago or earlier
-        const twoMonthsAgo = new Date();
-        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-        vacations = vacations.filter(vacation => {
-            const startDate = new Date(vacation.startDate);
-            return startDate > twoMonthsAgo;
-        });
-
-        const data = {people, vacations};
-        const jsonString = JSON.stringify(data);
-        const compressed = lzw_encode(jsonString);
-        const encoded = encodeURIComponent(compressed);
-        window.location.hash = encoded;
+        // Keep everything that overlaps the previous calendar year so "Previous year" stats stay complete;
+        // older entries are dropped to keep the URL short.
+        const keepFrom = `${THIS_YEAR - 1}-01-01`;
+        vacations = vacations.filter(v => v.endDate > keepFrom);
+        const encoded = encodeURIComponent(lzw_encode(JSON.stringify({people, vacations})));
+        history.replaceState(null, '', '#' + encoded);
     }
 
     function loadData() {
         const encoded = window.location.hash.substring(1);
         if (encoded === '') return;
-
         try {
-            const compressed = decodeURIComponent(encoded);
-            const jsonString = lzw_decode(compressed);
-            const data = JSON.parse(jsonString);
+            const data = JSON.parse(lzw_decode(decodeURIComponent(encoded)));
             people = data.people || [];
             vacations = data.vacations || [];
         } catch (error) {
             console.error('Error loading data:', error);
+            showToast('Could not read the data in this link');
         }
+    }
 
+    // ---------- UI helpers ----------
+    let toastTimer;
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    async function copyText(text, msg) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (e) {
+            console.warn('Clipboard API failed, falling back to execCommand', e);
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+        }
+        showToast(msg);
+    }
+
+    function copyLink() {
+        copyText(window.location.href, 'Link copied');
+    }
+
+    function copyEmbed() {
+        copyText(`<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`, 'Embed code copied');
+    }
+
+    function openSiteInNewWindow() {
+        window.open(window.location.href, '_blank');
+    }
+
+    function isInIframe() {
+        return window.self !== window.top;
+    }
+
+    function renderPicker(containerId, selected, onChange) {
+        const c = document.getElementById(containerId);
+        c.innerHTML = '';
+        if (people.length === 0) {
+            c.innerHTML = '<span class="hint">Add team members first.</span>';
+            return;
+        }
+        people.forEach((p, i) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip';
+            b.textContent = p;
+            b.setAttribute('aria-pressed', selected.has(i));
+            b.onclick = () => {
+                selected.has(i) ? selected.delete(i) : selected.add(i);
+                b.setAttribute('aria-pressed', selected.has(i));
+                onChange && onChange();
+            };
+            c.appendChild(b);
+        });
+    }
+
+    function validate(selected, start, endIncl) {
+        if (selected.size === 0) return 'Pick at least one person.';
+        if (!start || !endIncl) return 'Pick both dates.';
+        if (endIncl < start) return 'The last day off can’t be before the first.';
+        return null;
+    }
+
+    function rangeHint(start, endIncl) {
+        if (!start || !endIncl || endIncl < start) return '';
+        const n = workdays(start, addDays(endIncl, 1));
+        return `${n} working day${n === 1 ? '' : 's'}`;
+    }
+
+    function linkDates(startEl, endEl, hintEl) {
+        const update = () => {
+            endEl.min = startEl.value || '';
+            if (startEl.value && (!endEl.value || endEl.value < startEl.value)) endEl.value = startEl.value;
+            hintEl.textContent = rangeHint(startEl.value, endEl.value);
+        };
+        startEl.addEventListener('change', update);
+        endEl.addEventListener('change', update);
+        return update;
+    }
+
+    // ---------- people ----------
+    function addPerson() {
+        const input = document.getElementById('personName');
+        const err = document.getElementById('personError');
+        const name = input.value.trim();
+        err.textContent = '';
+        if (!name) {
+            err.textContent = 'Enter a name.';
+            return;
+        }
+        if (people.includes(name)) {
+            err.textContent = `${name} is already on the team.`;
+            return;
+        }
+        people.push(name);
+        input.value = '';
+        persistData();
+        renderAll();
+        input.focus();
+    }
+
+    function removePerson(index) {
+        const affected = vacations.filter(v => v.peopleIndexes.includes(index)).length;
+        const msg = affected
+            ? `Remove ${people[index]}? Their ${affected} vacation entr${affected === 1 ? 'y' : 'ies'} will be removed too.`
+            : `Remove ${people[index]}?`;
+        if (!confirm(msg)) return;
+        vacations = vacations
+            .map(v => ({...v, peopleIndexes: v.peopleIndexes.filter(i => i !== index).map(i => (i > index ? i - 1 : i))}))
+            .filter(v => v.peopleIndexes.length > 0);
+        people.splice(index, 1);
+        addSelected.clear();
+        persistData();
+        renderAll();
+    }
+
+    function renderPeople() {
+        const list = document.getElementById('peopleList');
+        list.innerHTML = '';
+        document.getElementById('teamCount').textContent = people.length ? `${people.length} people` : '';
+        people.forEach((p, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.textContent = p;
+            const x = document.createElement('button');
+            x.className = 'x';
+            x.title = `Remove ${p}`;
+            x.setAttribute('aria-label', `Remove ${p}`);
+            x.textContent = '×';
+            x.onclick = () => removePerson(i);
+            chip.appendChild(x);
+            list.appendChild(chip);
+        });
+    }
+
+    // ---------- vacations ----------
+    function addVacation() {
+        const nameEl = document.getElementById('vacationName');
+        const startEl = document.getElementById('startDate');
+        const endEl = document.getElementById('endDate');
+        const err = document.getElementById('addError');
+        const problem = validate(addSelected, startEl.value, endEl.value);
+        err.textContent = problem || '';
+        if (problem) return;
+        vacations.push({
+            name: nameEl.value.trim() || 'Vacation',
+            peopleIndexes: [...addSelected].sort((a, b) => a - b),
+            startDate: startEl.value,
+            endDate: addDays(endEl.value, 1)
+        });
+        nameEl.value = '';
+        startEl.value = '';
+        endEl.value = '';
+        addSelected.clear();
+        document.getElementById('addHint').textContent = '';
+        persistData();
+        renderAll();
+        showToast('Vacation added');
+    }
+
+    function openEdit(index) {
+        if (isInIframe()) return;
+        const v = vacations[index];
+        editingIndex = index;
+        editSelected.clear();
+        v.peopleIndexes.forEach(i => editSelected.add(i));
+        renderPicker('editPeople', editSelected);
+        document.getElementById('editStart').value = v.startDate;
+        document.getElementById('editEnd').value = addDays(v.endDate, -1);
+        document.getElementById('editName').value = v.name;
+        document.getElementById('editError').textContent = '';
+        updateEditDates();
+        editDialog.showModal();
+    }
+
+    function saveEditing() {
+        const start = document.getElementById('editStart').value;
+        const end = document.getElementById('editEnd').value;
+        const problem = validate(editSelected, start, end);
+        document.getElementById('editError').textContent = problem || '';
+        if (problem) return;
+        vacations[editingIndex] = {
+            name: document.getElementById('editName').value.trim() || 'Vacation',
+            peopleIndexes: [...editSelected].sort((a, b) => a - b),
+            startDate: start,
+            endDate: addDays(end, 1)
+        };
+        editDialog.close();
+        persistData();
+        renderAll();
+        showToast('Saved');
+    }
+
+    function deleteEditing() {
+        if (!confirm('Delete this vacation?')) return;
+        vacations.splice(editingIndex, 1);
+        editDialog.close();
+        persistData();
+        renderAll();
+        showToast('Deleted');
+    }
+
+    function renderVacationList() {
+        const sel = document.getElementById('listPerson');
+        const showPast = document.getElementById('showPast').checked;
+        const person = sel.value === '' ? null : Number(sel.value);
+        const body = document.getElementById('vacationsList');
+        body.innerHTML = '';
+        const rows = vacations
+            .map((v, i) => ({v, i}))
+            .filter(({v}) => person === null || v.peopleIndexes.includes(person))
+            .filter(({v}) => showPast || statusOf(v) !== 'past')
+            .sort((a, b) => a.v.startDate.localeCompare(b.v.startDate));
+        document.getElementById('listEmpty').classList.toggle('hidden', rows.length > 0);
+        rows.forEach(({v, i}) => {
+            const st = statusOf(v);
+            const tr = document.createElement('tr');
+            if (st === 'past') tr.className = 'is-past';
+            tr.innerHTML = `
+                <td>${escapeHtml(v.peopleIndexes.map(p => people[p]).join(', '))}</td>
+                <td>${escapeHtml(v.name)}</td>
+                <td>${formatDate(v.startDate)}</td>
+                <td>${formatDate(addDays(v.endDate, -1))}</td>
+                <td class="num">${workdays(v.startDate, v.endDate)}</td>
+                <td><span class="badge ${st}">${st[0].toUpperCase() + st.slice(1)}</span></td>
+                <td class="num"></td>`;
+            const btn = document.createElement('button');
+            btn.className = 'secondary icon';
+            btn.textContent = 'Edit';
+            btn.onclick = () => openEdit(i);
+            tr.lastElementChild.appendChild(btn);
+            body.appendChild(tr);
+        });
+    }
+
+    function renderListFilter() {
+        const sel = document.getElementById('listPerson');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">Everyone</option>' +
+            people.map((p, i) => `<option value="${i}">${escapeHtml(p)}</option>`).join('');
+        if (prev !== '' && Number(prev) < people.length) sel.value = prev;
+    }
+
+    // ---------- stats ----------
+    function renderFrameSelect() {
+        const c = document.getElementById('frameSelect');
+        c.innerHTML = '';
+        FRAMES.forEach(f => {
+            const b = document.createElement('button');
+            b.innerHTML = `${f.year}<small>${f.label}</small>`;
+            b.setAttribute('aria-pressed', f.year === frameYear);
+            b.onclick = () => {
+                frameYear = f.year;
+                try {
+                    localStorage.setItem('vacavaca.frame', String(frameYear));
+                } catch (e) {
+                    console.warn('Could not remember frame selection', e);
+                }
+                renderFrameSelect();
+                renderStats();
+            };
+            c.appendChild(b);
+        });
+    }
+
+    function renderStats() {
+        const from = `${frameYear}-01-01`, to = `${frameYear + 1}-01-01`;
+        const stats = people.map(() => ({taken: 0, planned: 0}));
+        vacations.forEach(v => {
+            const s = maxIso(v.startDate, from), e = minIso(v.endDate, to);
+            if (s >= e) return;
+            const taken = workdays(s, minIso(e, maxIso(s, TODAY)));
+            const planned = workdays(maxIso(s, TODAY), e);
+            v.peopleIndexes.forEach(p => {
+                if (!stats[p]) return;
+                stats[p].taken += taken;
+                stats[p].planned += planned;
+            });
+        });
+        const maxTotal = Math.max(1, ...stats.map(s => s.taken + s.planned));
+        const body = document.getElementById('statsBody');
+        body.innerHTML = people.length ? '' : '<tr><td colspan="5" class="empty">Add your team to see stats.</td></tr>';
+        let sumT = 0, sumP = 0;
+        people.forEach((p, i) => {
+            const {taken, planned} = stats[i];
+            sumT += taken;
+            sumP += planned;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${escapeHtml(p)}</td>
+                <td class="num">${taken}</td>
+                <td class="num">${planned}</td>
+                <td class="num"><strong>${taken + planned}</strong></td>
+                <td><div class="bar" title="${taken} taken, ${planned} planned">
+                    <div class="taken" style="width:${taken / maxTotal * 100}%"></div>
+                    <div class="planned" style="width:${planned / maxTotal * 100}%"></div>
+                </div></td>`;
+            body.appendChild(tr);
+        });
+        document.getElementById('statsFoot').innerHTML = people.length ? `
+            <tr><td>Team</td><td class="num">${sumT}</td><td class="num">${sumP}</td>
+            <td class="num">${sumT + sumP}</td><td></td></tr>` : '';
+    }
+
+    // ---------- timeline ----------
+    function renderTimeline() {
+        const container = document.getElementById('vacationTimeline');
+        const empty = vacations.length === 0 || people.length === 0;
+        container.classList.toggle('hidden', empty);
+        document.getElementById('timelineEmpty').classList.toggle('hidden', !empty);
+        if (empty) return;
+
+        const items = new vis.DataSet();
+        vacations.forEach((v, index) => {
+            const days = workdays(v.startDate, v.endDate);
+            const others = v.peopleIndexes.length > 1 ? ` (with ${v.peopleIndexes.length - 1} more)` : '';
+            v.peopleIndexes.forEach((p, pi) => {
+                if (people[p] === undefined) return;
+                items.add({
+                    id: index + '-' + pi,
+                    group: p,
+                    content: v.name === 'Vacation' ? `${days}d` : `${escapeHtml(v.name)} · ${days}d`,
+                    title: `${escapeHtml(v.name)}: ${escapeHtml(people[p])}${others}<br>${formatDate(v.startDate)} – ${formatDate(addDays(v.endDate, -1))}<br>${days} working days`,
+                    start: v.startDate,
+                    end: v.endDate,
+                    className: statusOf(v) === 'past' ? 'past' : ''
+                });
+            });
+        });
+        const groups = new vis.DataSet(people.map((p, i) => ({id: i, content: escapeHtml(p)})));
+
+        if (timeline) {
+            timeline.setGroups(groups);
+            timeline.setItems(items);
+            return;
+        }
+        timeline = new vis.Timeline(container, items, groups, {
+            stack: false,
+            min: `${THIS_YEAR - 1}-01-01`,
+            max: `${THIS_YEAR + 2}-01-01`,
+            start: addDays(TODAY, -14),
+            end: addDays(TODAY, 75),
+            hiddenDates: [
+                {start: '2013-10-26 00:00:00', end: '2013-10-28 00:00:00', repeat: 'weekly'} // hide weekends
+            ],
+            zoomMin: 1000 * 60 * 60 * 24 * 7,
+            editable: false,
+            selectable: true,
+            orientation: 'top',
+            groupHeightMode: 'fixed',
+            margin: {item: 6, axis: 5},
+            tooltip: {followMouse: true}
+        });
+        timeline.on('click', props => {
+            if (props.what === 'item') openEdit(Number(String(props.item).split('-')[0]));
+        });
+    }
+
+    function moveTimeline(mode) {
+        if (!timeline) return;
+        if (mode === 'fit') timeline.fit();
+        else timeline.setWindow(addDays(TODAY, -14), addDays(TODAY, 75));
+    }
+
+    // ---------- wiring ----------
+    let updateEditDates = () => {};
+
+    function renderAll() {
         renderPeople();
-        updatePersonSelect();
-        renderVacations();
+        renderPicker('addPeople', addSelected);
+        renderListFilter();
+        renderStats();
+        renderTimeline();
+        renderVacationList();
     }
 
     window.onload = function () {
+        if (isInIframe()) document.body.classList.add('embed');
+        linkDates(document.getElementById('startDate'), document.getElementById('endDate'), document.getElementById('addHint'));
+        updateEditDates = linkDates(document.getElementById('editStart'), document.getElementById('editEnd'), document.getElementById('editHint'));
         loadData();
-        checkIframe();
-
-        document.querySelector('.collapsible').addEventListener('click', function () {
-            this.classList.toggle('active');
-            const content = this.nextElementSibling;
-            content.classList.toggle('hidden');
-        });
+        renderFrameSelect();
+        renderAll();
     };
-
 </script>
 
 </body>
 </html>
-
